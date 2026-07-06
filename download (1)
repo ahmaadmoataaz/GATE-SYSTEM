@@ -1,0 +1,143 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from 'react';
+import { TitleBar } from './components/TitleBar';
+import { Sidebar } from './components/Sidebar';
+import { ExportStatementView } from './components/ExportStatementView';
+
+import { ActiveTab, Container, Certificate } from './types';
+import { INITIAL_CONTAINERS, INITIAL_CERTIFICATES, INITIAL_ROLES } from './mockData';
+
+export default function App() {
+  // Global App States
+  const [lang, setLang] = useState<'ar' | 'en'>(() => {
+    const saved = localStorage.getItem('scct_lang');
+    return (saved as 'ar' | 'en') || 'ar'; // Default to Arabic to match screenshot
+  });
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => {
+    const saved = localStorage.getItem('scct_active_tab');
+    return (saved as ActiveTab) || ActiveTab.EXPORT_STATEMENT; // Default to main screenshot tab
+  });
+
+  const [currentUserRole, setCurrentUserRole] = useState<string>(() => {
+    return localStorage.getItem('scct_role') || 'Terminal Administrator';
+  });
+
+  const [containersList, setContainersList] = useState<Container[]>(() => {
+    const saved = localStorage.getItem('scct_containers');
+    return saved ? JSON.parse(saved) : INITIAL_CONTAINERS;
+  });
+
+  const [certificatesList, setCertificatesList] = useState<Certificate[]>(() => {
+    const saved = localStorage.getItem('scct_certificates');
+    return saved ? JSON.parse(saved) : INITIAL_CERTIFICATES;
+  });
+
+  // Sync state to LocalStorage
+  useEffect(() => {
+    localStorage.setItem('scct_lang', lang);
+  }, [lang]);
+
+  useEffect(() => {
+    localStorage.setItem('scct_active_tab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem('scct_role', currentUserRole);
+  }, [currentUserRole]);
+
+  useEffect(() => {
+    localStorage.setItem('scct_containers', JSON.stringify(containersList));
+  }, [containersList]);
+
+  useEffect(() => {
+    localStorage.setItem('scct_certificates', JSON.stringify(certificatesList));
+  }, [certificatesList]);
+
+  // Fetch role-based permissions
+  const activeRoleConfig = INITIAL_ROLES.find((r) => r.role === currentUserRole) || INITIAL_ROLES[0];
+  const permissions = activeRoleConfig.screens;
+
+  // Global reset handler
+  const handleRefreshAll = () => {
+    if (window.confirm(lang === 'ar' ? 'هل تريد استعادة البيانات الافتراضية للمرفأ؟' : 'Reset terminal database to default mock values?')) {
+      setContainersList(INITIAL_CONTAINERS);
+      setCertificatesList(INITIAL_CERTIFICATES);
+      setCurrentUserRole('Terminal Administrator');
+      setActiveTab(ActiveTab.EXPORT_STATEMENT);
+      localStorage.clear();
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-screen overflow-hidden bg-[#e0dfdf] font-sans text-gray-900 selection:bg-blue-100">
+      
+      {/* 1. Top Desktop Title Menu Bar */}
+      <TitleBar
+        lang={lang}
+        setLang={setLang}
+        currentUserRole={lang === 'ar' ? activeRoleConfig.roleAr : activeRoleConfig.role}
+        onRefreshAll={handleRefreshAll}
+      />
+
+      {/* 2. Main content split panel */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Side Navigation Tree */}
+        <Sidebar
+          lang={lang}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          permissions={permissions}
+        />
+
+        {/* Dynamic active workspace screen */}
+        <div className="flex-1 overflow-hidden relative">
+          {activeTab === ActiveTab.EXPORT_STATEMENT ? (
+            <ExportStatementView
+              lang={lang}
+              permissions={permissions[ActiveTab.EXPORT_STATEMENT]}
+              containersList={containersList}
+              setContainersList={setContainersList}
+              certificatesList={certificatesList}
+              setCertificatesList={setCertificatesList}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full bg-[#dfdfdf] border border-[#808080] p-6 text-center select-none" dir="rtl">
+              <div className="w-16 h-16 bg-[#eae9e1] border-2 border-red-600 rounded-none flex items-center justify-center text-3xl font-bold mb-4 shadow-sm">
+                ⚠️
+              </div>
+              <h2 className="text-base font-bold text-red-700 mb-2 font-sans">
+                {lang === 'ar' ? 'عفواً، لا توجد صلاحية للوصول' : 'Access Denied'}
+              </h2>
+              <p className="text-xs text-black max-w-sm font-sans leading-relaxed">
+                {lang === 'ar' 
+                  ? 'ليس لديك صلاحية كافية لتشغيل هذه الصفحة أو الخدمة في الوقت الحالي. يرجى مراجعة إدارة الأنظمة للتحقق من صلاحيات حسابك.' 
+                  : 'You do not have sufficient permissions to access this screen. Please contact the system administrator.'}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 3. Bottom Terminal OS Status bar exactly mimicking the image status bar */}
+      <div className="bg-[#b31414] text-[#ffd8d8] font-mono text-[11px] px-3 py-1 flex items-center justify-between border-t border-red-900 select-none flex-none">
+        <div className="flex items-center gap-3">
+          <span className="font-bold">Version 8.4.2.0</span>
+          <span>&lt;&nbsp;&nbsp;&gt;</span>
+          <span className="bg-[#8b0c0c] px-2 py-0.2 rounded text-white font-semibold">
+            Ahmed.Moataz - SCCTOPSGT30
+          </span>
+        </div>
+        
+        <div className="flex items-center gap-3 font-semibold text-xs tracking-wider">
+          <span className="animate-pulse">&lt;&lt; LIVE &gt;&gt;</span>
+        </div>
+      </div>
+
+    </div>
+  );
+}

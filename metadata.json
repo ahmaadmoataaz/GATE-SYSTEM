@@ -1,0 +1,6 @@
+{
+  "name": "Gate System Dashboard",
+  "description": "Port terminal customs certificate creation, verification, and container release management platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

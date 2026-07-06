@@ -1,0 +1,225 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { Monitor, RefreshCw, Languages, HelpCircle, Shield, Sliders } from 'lucide-react';
+import { translations } from '../translations';
+
+interface TitleBarProps {
+  lang: 'ar' | 'en';
+  setLang: (lang: 'ar' | 'en') => void;
+  currentUserRole: string;
+  onRefreshAll: () => void;
+}
+
+export const TitleBar: React.FC<TitleBarProps> = ({
+  lang,
+  setLang,
+  currentUserRole,
+  onRefreshAll,
+}) => {
+  const t = translations[lang];
+  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
+  const menus = {
+    file: [
+      { id: 'new_cert', label: lang === 'ar' ? 'ملف جديد' : 'New Certificate' },
+      { id: 'print', label: lang === 'ar' ? 'طباعة المحاضر' : 'Print Reports' },
+      { id: 'exit', label: lang === 'ar' ? 'خروج من النظام' : 'Exit System' },
+    ],
+    setting: [
+      { id: 'lang_ar', label: 'العربية (Arabic)', action: () => setLang('ar') },
+      { id: 'lang_en', label: 'English (الإنجليزية)', action: () => setLang('en') },
+      { id: 'reset', label: lang === 'ar' ? 'إعادة ضبط البيانات' : 'Reset Database' },
+    ],
+    windows: [
+      { id: 'tile', label: lang === 'ar' ? 'ترتيب النوافذ' : 'Tile Windows' },
+      { id: 'cascade', label: lang === 'ar' ? 'تتالي النوافذ' : 'Cascade Windows' },
+    ],
+    about: [
+      { id: 'scct_info', label: lang === 'ar' ? 'معلومات المحطة SCCT' : 'SCCT Terminal Info' },
+      { id: 'version', label: lang === 'ar' ? 'إصدار النظام 8.4.2.0' : 'System Version 8.4.2.0' },
+    ],
+  };
+
+  const handleMenuClick = (menu: string) => {
+    if (activeMenu === menu) {
+      setActiveMenu(null);
+    } else {
+      setActiveMenu(menu);
+    }
+  };
+
+  const closeMenu = () => {
+    setActiveMenu(null);
+  };
+
+  return (
+    <div className="bg-[#f0f0f0] border-b border-[#ababab] select-none text-xs text-[#000000] relative z-50">
+      {/* Real OS Title bar */}
+      <div className="bg-[#e1e1e1] px-3 py-1 flex items-center justify-between border-b border-[#d0d0d0]">
+        <div className="flex items-center gap-2">
+          <Monitor className="w-3.5 h-3.5 text-[#444]" />
+          <span className="font-bold tracking-tight text-[#222]">
+            Gate System - Suez Canal Container Terminal
+          </span>
+          <span className="bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded font-mono font-bold animate-pulse">
+            LIVE
+          </span>
+        </div>
+        
+        {/* Developer Badge on top right matching the image */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 bg-[#d8ffd8] border border-green-400 px-2 py-0.5 rounded text-[10px] font-semibold text-green-800">
+            <Shield className="w-3 h-3" />
+            <span>{currentUserRole}</span>
+          </div>
+          <div className="text-[14px] font-extrabold text-[#113a7a] tracking-wider drop-shadow-sm font-sans flex items-center gap-1.5">
+            <span className="text-gray-400">|</span>
+            <span>Development Team</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Retro desktop menu list */}
+      <div className="flex items-center justify-between px-2 py-1.5 relative">
+        <div className="flex items-center gap-1">
+          {/* File Menu */}
+          <div className="relative">
+            <button
+              onClick={() => handleMenuClick('file')}
+              className={`px-3 py-1 rounded hover:bg-[#113a7a] hover:text-white cursor-pointer transition-colors ${
+                activeMenu === 'file' ? 'bg-[#113a7a] text-white' : ''
+              }`}
+            >
+              {t.file}
+            </button>
+            {activeMenu === 'file' && (
+              <div className="absolute left-0 top-full mt-1 w-48 bg-white border border-[#ababab] shadow-lg rounded-sm py-1 z-50">
+                {menus.file.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={closeMenu}
+                    className="w-full text-left px-4 py-2 hover:bg-[#113a7a] hover:text-white text-xs cursor-pointer"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Settings Menu */}
+          <div className="relative">
+            <button
+              onClick={() => handleMenuClick('setting')}
+              className={`px-3 py-1 rounded hover:bg-[#113a7a] hover:text-white cursor-pointer transition-colors ${
+                activeMenu === 'setting' ? 'bg-[#113a7a] text-white' : ''
+              }`}
+            >
+              {t.setting}
+            </button>
+            {activeMenu === 'setting' && (
+              <div className="absolute left-0 top-full mt-1 w-48 bg-white border border-[#ababab] shadow-lg rounded-sm py-1 z-50">
+                {menus.setting.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      if (item.action) item.action();
+                      closeMenu();
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-[#113a7a] hover:text-white text-xs cursor-pointer flex justify-between items-center"
+                  >
+                    <span>{item.label}</span>
+                    {item.id.includes(lang) && <span className="text-green-600 font-bold">✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Windows Menu */}
+          <div className="relative">
+            <button
+              onClick={() => handleMenuClick('windows')}
+              className={`px-3 py-1 rounded hover:bg-[#113a7a] hover:text-white cursor-pointer transition-colors ${
+                activeMenu === 'windows' ? 'bg-[#113a7a] text-white' : ''
+              }`}
+            >
+              {t.windows}
+            </button>
+            {activeMenu === 'windows' && (
+              <div className="absolute left-0 top-full mt-1 w-48 bg-white border border-[#ababab] shadow-lg rounded-sm py-1 z-50">
+                {menus.windows.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={closeMenu}
+                    className="w-full text-left px-4 py-2 hover:bg-[#113a7a] hover:text-white text-xs cursor-pointer"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* About Menu */}
+          <div className="relative">
+            <button
+              onClick={() => handleMenuClick('about')}
+              className={`px-3 py-1 rounded hover:bg-[#113a7a] hover:text-white cursor-pointer transition-colors ${
+                activeMenu === 'about' ? 'bg-[#113a7a] text-white' : ''
+              }`}
+            >
+              {t.about}
+            </button>
+            {activeMenu === 'about' && (
+              <div className="absolute left-0 top-full mt-1 w-52 bg-white border border-[#ababab] shadow-lg rounded-sm py-1 z-50">
+                {menus.about.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={closeMenu}
+                    className="w-full text-left px-4 py-2 hover:bg-[#113a7a] hover:text-white text-xs cursor-pointer"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Global Toolbar tools */}
+        <div className="flex items-center gap-3 px-2">
+          {/* Language Fast Switch */}
+          <button
+            onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-[#ccc] rounded shadow-sm hover:bg-[#f5f5f5] cursor-pointer transition-all font-semibold text-[#113a7a]"
+          >
+            <Languages className="w-3.5 h-3.5 text-[#113a7a]" />
+            <span>{lang === 'ar' ? 'English' : 'العربية'}</span>
+          </button>
+
+          {/* Reload State Action */}
+          <button
+            onClick={onRefreshAll}
+            title="Refresh Terminal Database"
+            className="p-1 hover:bg-[#e1e1e1] rounded cursor-pointer transition-colors"
+          >
+            <RefreshCw className="w-4 h-4 text-gray-700" />
+          </button>
+        </div>
+      </div>
+      
+      {/* Background overlay to close menu */}
+      {activeMenu && (
+        <div
+          onClick={closeMenu}
+          className="fixed inset-0 bg-transparent z-40"
+        />
+      )}
+    </div>
+  );
+};
